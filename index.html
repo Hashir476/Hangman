@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    
+</head>
+<style>
+    body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f9f9f9;
+}
+
+.container {
+    width: 40%;
+    background: rgb(246, 162, 162);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.categories, #gameArea {
+    background-color: aliceblue;
+    color: black;
+    border-radius: 6px;
+    padding: 1.5em;
+    margin-top: 1rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.categorySelect select,
+input[type="text"] {
+    width: 100%;
+    padding: 0.5em;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+}
+
+.catergorySelect {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.catergorySelect label {
+    flex: 1 1 100%;
+    font-weight: bold;
+}
+button {
+    background-color: rgb(255, 217, 236);
+    color: black;
+    border-radius: 6px;
+    padding: 10px 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: rgb(255, 182, 202);
+}
+
+
+
+</style>
+
+<body>
+    <div class="container">
+        <div class="categories">
+            <h1>Hangman Game</h1>
+            <h2>Select a Category</h2>
+            <div class="categorySelect">
+                <select id="categorySelect">
+                    <option value="" disabled selected>Select a Category</option>
+                    <option value="animals">Animals</option>
+                    <option value="countries">Countries</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="movies">Movies</option>
+                    <option value="sports">Sports</option>
+                </select>
+            </div>
+            <button id="newGameBtn">New Game</button>
+        </div>
+        <div id="gameArea" class="hidden">
+            <h2>Category: <span id="categoryName"></span></h2>
+            <p id="wordToGuess"></p>
+            <p>Incorrect Guesses: <span id="incorrectGuesses">0</span></p>
+            <p>Remaining Attempts: <span id="remainingAttempts">6</span></p>
+            <div id="guessedLetters"></div>
+            <input type="text" id="letterInput" maxlength="1" placeholder="Enter a letter" />
+            <button id="guessBtn">Guess</button>
+            <button id="restartBtn">Restart Game</button>
+        </div>
+    </div>
+
+    <script> const words = {
+    animals: ["elephant", "giraffe", "kangaroo", "dolphin", "tiger"],
+    countries: ["pakistan", "canada", "brazil", "france", "japan"],
+    fruits: ["banana", "apple", "grapes", "pineapple", "mango"],
+    movies: ["inception", "avatar", "matrix", "gladiator", "coco"],
+    sports: ["cricket", "soccer", "tennis", "badminton", "rugby"]
+};
+
+let selectedCategory = "";
+let selectedWord = "";
+let remainingAttempts = 6;
+let guessedLetters = [];
+let incorrectGuesses = [];
+
+const categorySelect = document.getElementById("categorySelect");
+const newGameBtn = document.getElementById("newGameBtn");
+const gameArea = document.getElementById("gameArea");
+const categoryName = document.getElementById("categoryName");
+const wordToGuess = document.getElementById("wordToGuess");
+const incorrectGuessesDisplay = document.getElementById("incorrectGuesses");
+const remainingAttemptsDisplay = document.getElementById("remainingAttempts");
+const guessedLettersDisplay = document.getElementById("guessedLetters");
+const letterInput = document.getElementById("letterInput");
+const guessBtn = document.getElementById("guessBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+// Start a new game
+newGameBtn.addEventListener("click", () => {
+    selectedCategory = categorySelect.value;
+
+    if (!selectedCategory) {
+        alert("Please select a category to start the game.");
+        return;
+    }
+
+    selectedWord = words[selectedCategory][Math.floor(Math.random() * words[selectedCategory].length)];
+    guessedLetters = [];
+    incorrectGuesses = [];
+    remainingAttempts = 6;
+
+    updateUI();
+    categoryName.textContent = selectedCategory;
+    gameArea.classList.remove("hidden");
+});
+
+// Handle guesses
+guessBtn.addEventListener("click", () => {
+    const letter = letterInput.value.toLowerCase();
+
+    if (!letter || guessedLetters.includes(letter) || incorrectGuesses.includes(letter)) {
+        alert("Please enter a valid, unused letter.");
+        return;
+    }
+
+    if (selectedWord.includes(letter)) {
+        guessedLetters.push(letter);
+    } else {
+        incorrectGuesses.push(letter);
+        remainingAttempts--;
+    }
+
+    letterInput.value = "";
+    checkGameState();
+    updateUI();
+});
+
+// Restart game
+restartBtn.addEventListener("click", () => {
+    location.reload(); // Simple reload to reset everything
+});
+
+// Update UI
+function updateUI() {
+    const wordDisplay = selectedWord
+        .split("")
+        .map((letter) => (guessedLetters.includes(letter) ? letter : "_"))
+        .join(" ");
+    wordToGuess.textContent = wordDisplay;
+
+    incorrectGuessesDisplay.textContent = incorrectGuesses.length;
+    remainingAttemptsDisplay.textContent = remainingAttempts;
+    guessedLettersDisplay.textContent = `Guessed Letters: ${[...guessedLetters, ...incorrectGuesses].join(", ")}`;
+}
+
+// Check for win/loss
+function checkGameState() {
+    if (!wordToGuess.textContent.includes("_")) {
+        alert("Congratulations! You guessed the word.");
+        restartBtn.classList.remove("hidden");
+        guessBtn.disabled = true;
+        letterInput.disabled = true;
+    } else if (remainingAttempts <= 0) {
+        alert(`Game Over! The word was "${selectedWord}".`);
+        restartBtn.classList.remove("hidden");
+        guessBtn.disabled = true;
+        letterInput.disabled = true;
+    }
+}
+</script>
+</body>
+</html>
